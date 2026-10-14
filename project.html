@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Spam Detector</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="card">
+            <h2>Spam Message Detector</h2>
+            <p class="subtitle">Check if an SMS or email contains suspicious content</p>
+            
+            <textarea id="msg" rows="5" placeholder="Paste or type your message here..."></textarea>
+            
+            <div class="button-group">
+                <button id="checkBtn" type="button" onclick="checkSpam()">Check Message</button><br><br>
+                <button id="clearBtn" type="button" onclick="clearAll()">Clear</button>
+            </div>
+            
+            <div id="result"></div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>
