@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpamGuard AI — Student Capstone Project</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="theme-dark">
+    <div class="app-layout">
+        <!-- Top Header Bar -->
+        <header class="app-nav">
+            <div class="brand">
+                <div class="logo-shield">🎓</div>
+                <div>
+                    <div class="brand-title">
+                        <h2>SPAMGUARD AI</h2>
+                        <span class="badge-edition">STUDENT CAPSTONE</span>
+                    </div>
+                    <p class="brand-sub">Comparative NLP & Threat Intelligence Platform • Academic Project</p>
+                </div>
+            </div>
+
+            <!-- Global Action Bar -->
+            <div class="nav-actions">
+                <div class="server-status">
+                    <span class="status-dot pulse"></span>
+                    <span class="status-text">MODELS LOADED</span>
+                </div>
+                <button type="button" class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    🌙
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="cyber-tabs">
+            <button type="button" class="tab-btn active" onclick="switchTab('scanner', event)">
+                <span class="tab-icon">🛡️</span> Live Scanner
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('benchmark', event)">
+                <span class="tab-icon">📈</span> Model Benchmark & ROC-AUC
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('dataset-tab', event)">
+                <span class="tab-icon">🗄️</span> Open Dataset Stream
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('adversarial', event)">
+                <span class="tab-icon">⚔️</span> Adversarial Attack Lab
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('email-headers', event)">
+                <span class="tab-icon">📧</span> Email Header Inspector
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('batch', event)">
+                <span class="tab-icon">📁</span> Batch CSV Scanner
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('telemetry', event)">
+                <span class="tab-icon">📊</span> Telemetry & Audit Log
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('viva-guide', event)">
+                <span class="tab-icon">🎓</span> Viva Guide & Defense Dossier
+            </button>
+        </nav>
+
+        <!-- TAB 1: LIVE SCANNER -->
+        <section id="tab-scanner" class="tab-content active">
+            <div class="scanner-grid">
+                <!-- Left Input Panel -->
+                <div class="card input-card">
+                    <div class="card-header">
+                        <h3>Input Message to Inspect</h3>
+                        <span class="hint-text">Paste SMS, email, or suspicious text</span>
+                    </div>
+
+                    <!-- Preset Chips -->
+                    <div class="sample-section">
+                        <span class="sample-label">⚡ Preset Demonstration Samples:</span>
+                        <div class="sample-chips">
+                            <button type="button" class="chip" onclick="loadSample('bank')">🏦 Bank Phishing (IP URL)</button>
+                            <button type="button" class="chip" onclick="loadSample('brand')">🎯 Brand Spoof (PayPal Lookalike)</button>
+                            <button type="button" class="chip" onclick="loadSample('lottery')">🎁 Lottery Scam</button>
+                            <button type="button" class="chip" onclick="loadSample('disposable')">✉️ Disposable Burner Email</button>
+                            <button type="button" class="chip" onclick="loadSample('work')">💼 Clean Work Email</button>
+                        </div>
+                    </div>
+
+                    <!-- Quishing Image Dropzone -->
+                    <div class="quishing-dropzone" id="qrDropzone" onclick="document.getElementById('qrFileInput').click()">
+                        <input type="file" id="qrFileInput" accept="image/*" style="display:none;" onchange="handleQrFileUpload(event)">
+                        <div style="font-size:1.5rem; margin-bottom:4px;">📷</div>
+                        <div style="font-weight:600; font-size:0.85rem; color:var(--text-bright);">Drop QR Code Image Here (or Click to Upload)</div>
+                        <span class="hint-text" style="font-size:0.75rem;">Deep Quishing Forensics: SSRF Intranet checks, Open Redirects & URL extraction</span>
+                    </div>
+
+                    <div class="textarea-container">
+                        <textarea id="msg" rows="6" placeholder="Paste or type test message here..."></textarea>
+                        <div class="textarea-footer">
+                            <span id="charCount">0 characters • 0 words</span>
+                            <label class="auto-scan-toggle">
+                                <input type="checkbox" id="autoScanToggle" checked>
+                                <span>Live Scan as you type</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="checkBtn" type="button" class="btn-primary" onclick="checkSpam()">
+                            <span id="btnIcon">🔍</span> <span id="btnText">Analyze Message</span>
+                        </button>
+                        <button id="clearBtn" type="button" class="btn-secondary" onclick="clearAll()">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Right Results Panel -->
+                <div class="card result-card" id="resultCard" style="display: none;">
+                    <!-- Verdict Bar -->
+                    <div class="result-top-bar">
+                        <div class="verdict-wrapper">
+                            <span class="verdict-pill" id="verdictPill">ANALYZING</span>
+                            <div class="verdict-meta" id="verdictMeta">Risk Level: -- • 0ms</div>
+                        </div>
+
+                        <!-- Gauge Meter -->
+                        <div class="gauge-container">
+                            <svg class="gauge" viewBox="0 0 36 36">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle-fill" id="gaugeProgress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div class="gauge-text">
+                                <span id="scoreNumber">0</span>
+                                <span class="gauge-sub">SCORE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side-by-Side Model Comparison -->
+                    <div class="model-comparison-row">
+                        <div class="intel-badge">
+                            <span class="badge-title">🧠 Naive Bayes Model</span>
+                            <span class="badge-value" id="nbBadgeValue">--</span>
+                        </div>
+                        <div class="intel-badge">
+                            <span class="badge-title">📐 TF-IDF Vector Space</span>
+                            <span class="badge-value" id="tfidfBadgeValue">--</span>
+                        </div>
+                        <div class="intel-badge">
+                            <span class="badge-title">⚖️ Logistic Regression</span>
+                            <span class="badge-value" id="lrBadgeValue">--</span>
+                        </div>
+                        <div class="intel-badge">
+                            <span class="badge-title">🧮 Shannon Entropy (Stylometry)</span>
+                            <span class="badge-value" id="entropyBadgeValue">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Threat Dimension Breakdown -->
+                    <div class="breakdown-section">
+                        <h4>Threat Dimension Vectors</h4>
+                        <div class="breakdown-grid" id="breakdownGrid"></div>
+                    </div>
+
+                    <!-- Live IP Geolocation & ASN -->
+                    <div class="intel-section" id="intelSection" style="display: none;">
+                        <h4>🌐 Live IP Threat Intelligence</h4>
+                        <div id="intelCards" class="intel-cards"></div>
+                    </div>
+
+                    <!-- Brand Impersonation Alerts -->
+                    <div class="brand-alert-section" id="brandSection" style="display: none;">
+                        <h4>🎯 Brand Impersonation & Typosquatting Alerts</h4>
+                        <div id="brandCards" class="brand-cards"></div>
+                    </div>
+
+                    <!-- Reasons List -->
+                    <div class="reasons-section">
+                        <h4>Flagged Evidence & Indicators</h4>
+                        <ul class="reasons-list" id="reasonsList"></ul>
+                    </div>
+
+                    <!-- Interactive Word Highlighting -->
+                    <div class="highlight-section" id="highlightSection" style="display: none;">
+                        <h4>Detected Threat Words (Interactive Preview)</h4>
+                        <div class="highlight-preview" id="highlightPreview"></div>
+                    </div>
+
+                    <!-- Explainable AI (XAI): Word Log-Odds Attribution -->
+                    <div class="xai-section" id="xaiSection" style="display: none;">
+                        <h4>🧠 Explainable AI (XAI): Word Log-Odds Decision Attribution</h4>
+                        <p class="hint-text">Displays the mathematical weight of individual tokens pulling the decision towards Spam (red / positive log-odds) vs Ham (green / negative log-odds).</p>
+                        <div id="xaiChart" class="xai-chart"></div>
+                    </div>
+
+                    <!-- Information-Theoretic Stylometry Details -->
+                    <div class="card" id="stylometryCard" style="display: none; margin-top: 16px; background: rgba(15, 23, 42, 0.6);">
+                        <h4 style="font-size:0.95rem; margin-bottom: 8px;">📊 Information-Theoretic & Stylometric Fingerprint</h4>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;" id="stylometryMetricsGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Cybersecurity Major: MITRE ATT&CK Matrix Techniques -->
+                    <div class="card" id="mitreSection" style="display: none; margin-top: 16px; border-left: 4px solid var(--accent-color);">
+                        <h4 style="font-size:0.95rem; margin-bottom: 8px;">🛡️ MITRE ATT&CK Matrix Mapping (SOC Telemetry)</h4>
+                        <div id="mitreCards" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+
+                    <!-- Cybersecurity Major: Automated IOC Extraction & Defanging -->
+                    <div class="card" id="iocSection" style="display: none; margin-top: 16px; border-left: 4px solid var(--danger);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="font-size:0.95rem;">🔬 Defanged Cyber IOCs & Digital Artifacts</h4>
+                            <span id="iocCountBadge" style="font-size:0.75rem; background:rgba(239,68,68,0.2); color:var(--danger); padding:2px 8px; border-radius:12px;">0 IOCs</span>
+                        </div>
+                        <div id="iocDetailsBox" style="font-family:monospace; font-size:0.8rem; margin-top:8px; line-height:1.6; color:var(--text-bright);"></div>
+                    </div>
+
+                    <!-- Cybersecurity Major: Automated SOC Incident Response Remediation Playbook -->
+                    <div class="card" id="playbookSection" style="display: none; margin-top: 16px; border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="font-size:0.95rem; color:#10b981;">📋 SOC Incident Remediation Playbook (Defensive SOP)</h4>
+                            <span style="font-size:0.75rem; color:#10b981; border:1px solid #10b981; padding:2px 8px; border-radius:10px;">ACTIONABLE</span>
+                        </div>
+                        <ul id="playbookList" style="margin:8px 0 0 16px; font-size:0.85rem; color:var(--text-bright); line-height:1.6;"></ul>
+                    </div>
+
+                    <!-- Export Report Action -->
+                    <div class="export-bar">
+                        <button type="button" class="btn-export" onclick="exportAnalysisJson()">
+                            📥 Export Analysis JSON
+                        </button>
+                        <button type="button" class="btn-export" onclick="exportStixBundle()" style="background: rgba(99, 102, 241, 0.2); border: 1px solid var(--accent-color);">
+                            🛡️ Export STIX 2.1 Threat Bundle
+                        </button>
+                        <button type="button" class="btn-export" onclick="window.print()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981;">
+                            🖨️ Print Forensic Report
+                        </button>
+                        <div class="feedback-quick">
+                            <span>Feedback:</span>
+                            <button type="button" onclick="sendFeedback('CONFIRMED')">👍 Correct</button>
+                            <button type="button" onclick="sendFeedback('FALSE_POSITIVE')">⚠️ False Alarm</button>
+                            <button type="button" onclick="sendFeedback('FALSE_NEGATIVE')">🚩 Missed</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: MODEL BENCHMARK & COMPARISON -->
+        <section id="tab-benchmark" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Academic Model Benchmark & Confusion Matrix</h3>
+                    <button type="button" class="btn-primary" onclick="loadBenchmarkMetrics()" style="flex:none; padding:8px 16px;">
+                        ⚡ Run Live Evaluation Benchmark
+                    </button>
+                </div>
+                <p class="hint-text">Evaluates all three machine learning and heuristic models using 5-Fold Stratified Cross-Validation over the SMS corpus, computing Confusion Matrix, ROC-AUC, Accuracy, Precision, Recall, Specificity, and F1-Score.</p>
+
+                <div id="benchmarkLoading" style="display:none; text-align:center; padding:20px;">
+                    <em>Evaluating models across SMS corpus dataset...</em>
+                </div>
+
+                <div id="benchmarkResultsArea">
+                    <!-- Cards will be populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: OPEN DATASET STREAM -->
+        <section id="tab-dataset-tab" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🗄️ Open-Source Corpus Stream (UCI / SpamAssassin Benchmark)</h3>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-secondary" onclick="loadRandomCorpusSample()" style="padding:6px 14px;">
+                            🎲 Sample Random Message
+                        </button>
+                        <button type="button" class="btn-primary" onclick="loadCorpusStream()" style="padding:6px 14px;">
+                            🔄 Refresh Corpus Stream
+                        </button>
+                    </div>
+                </div>
+                <p class="hint-text">Live interface connected directly to the open-source dataset repository powering model training and 5-fold stratified cross-validation.</p>
+
+                <!-- Dataset Summary Banner -->
+                <div id="datasetStatsBanner" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+                    <!-- Populated via JS -->
+                </div>
+
+                <div class="table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th style="width: 100px;">True Label</th>
+                                <th>Message Payload</th>
+                                <th style="width: 100px;">Length</th>
+                                <th style="width: 120px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="datasetTableBody">
+                            <tr><td colspan="5" style="text-align:center;">Click 'Refresh Corpus Stream' to fetch live dataset samples.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ADVERSARIAL ATTACK & DEFENSE LAB -->
+        <section id="tab-adversarial" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>⚔️ Adversarial Attack & Robustness Laboratory</h3>
+                    <span class="hint-text">Simulates real-world evasion attacks against standard NLP vs SpamGuard's multi-layer defense</span>
+                </div>
+
+                <div class="sample-chips">
+                    <span class="sample-label">⚡ Preset Attack Samples:</span>
+                    <button type="button" class="chip" onclick="loadAttackPreset('homoglyph')">🔤 Cyrillic Homoglyphs</button>
+                    <button type="button" class="chip" onclick="loadAttackPreset('zerowidth')">👻 Zero-Width Hidden Injections</button>
+                    <button type="button" class="chip" onclick="loadAttackPreset('ham_poisoning')">📚 Shakespeare Good-Word Poisoning</button>
+                    <button type="button" class="chip" onclick="loadAttackPreset('leetspeak')">1337 Leet-Speak Camouflage</button>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px;">
+                    <label for="advInputMsg" style="font-weight:600; font-size:0.9rem;">Target Message:</label>
+                    <textarea id="advInputMsg" class="cyber-textarea" rows="3" placeholder="Enter message to perturb with adversarial evasion techniques..."></textarea>
+                    
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <label for="advAttackSelect" style="font-size:0.85rem; font-weight:600;">Attack Vector:</label>
+                        <select id="advAttackSelect" style="flex:1; min-width:260px; padding:8px 12px; border-radius:6px; background:var(--card-inner); color:var(--text-bright); border:1px solid var(--border-color);">
+                            <option value="HOMOGLYPH">Cyrillic-Latin Homoglyph Substitution (a, e, o -> Cyrillic)</option>
+                            <option value="ZERO_WIDTH">Zero-Width Invisible Space Injection (\u200B)</option>
+                            <option value="GOOD_WORD">Good-Word Dilution / Shakespeare Ham Poisoning</option>
+                            <option value="LEET_SPEAK">Leet-Speak Letter-Number Camouflage (@, 3, 1, 0, $)</option>
+                        </select>
+                        <button type="button" class="btn-primary" onclick="runAdversarialSimulation()" style="flex:none; padding:8px 20px;">
+                            ⚔️ Execute Adversarial Attack Simulation
+                        </button>
+                    </div>
+                </div>
+
+                <div id="advLoading" style="display:none; text-align:center; padding:20px;">
+                    <em>Perturbing payload and evaluating pipeline resilience...</em>
+                </div>
+
+                <div id="advResultsArea" style="display:none; margin-top:20px;">
+                    <!-- Attack simulation comparison will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: EMAIL HEADER INSPECTOR -->
+        <section id="tab-email-headers" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>RFC-822 Raw Email Header & Spoofing Inspector</h3>
+                    <span class="hint-text">Inspects From vs Reply-To mismatches, SPF, DKIM, and DMARC alignment</span>
+                </div>
+
+                <div class="sample-chips">
+                    <button type="button" class="chip" onclick="loadHeaderSample('spoofed')">🚨 Load Spoofed Bank Email Header</button>
+                    <button type="button" class="chip" onclick="loadHeaderSample('legit')">✅ Load Legitimate Authenticated Header</button>
+                </div>
+
+                <textarea id="emailHeaderInput" rows="7" class="code-font" placeholder="Paste full RFC-822 email headers here (including From:, Reply-To:, Authentication-Results:)..."></textarea>
+
+                <button type="button" class="btn-primary" onclick="inspectEmailHeaders()">
+                    🔍 Inspect Email Headers & Authentication
+                </button>
+
+                <div id="headerResultsBox" class="header-results-box" style="display: none;"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: BATCH CSV SCANNER -->
+        <section id="tab-batch" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Batch CSV Message Classifier</h3>
+                    <span class="hint-text">Classify multiple messages simultaneously to test batch accuracy</span>
+                </div>
+
+                <div class="batch-input-area">
+                    <label class="sample-label">Paste CSV Lines (One message per line):</label>
+                    <textarea id="batchInput" rows="6" placeholder="URGENT: Verify your account immediately! http://192.168.1.1&#10;Hi Alice, see you at lunch!&#10;Win $5,000,000 cash prize now!&#10;Your package was delivered to your doorstep."></textarea>
+                    
+                    <div class="button-group">
+                        <button type="button" class="btn-primary" onclick="runBatchScan()">
+                            ⚡ Process Batch Classification
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="loadBatchSample()">
+                            Load Sample Batch (10 messages)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Batch Results Container -->
+                <div id="batchResultsContainer" style="display: none;">
+                    <div class="batch-summary-cards">
+                        <div class="summary-card">
+                            <span class="summary-title">TOTAL PROCESSED</span>
+                            <span class="summary-value" id="batchTotal">0</span>
+                        </div>
+                        <div class="summary-card danger">
+                            <span class="summary-title">SPAM DETECTED</span>
+                            <span class="summary-value" id="batchSpam">0</span>
+                        </div>
+                        <div class="summary-card warning">
+                            <span class="summary-title">SUSPICIOUS</span>
+                            <span class="summary-value" id="batchSus">0</span>
+                        </div>
+                        <div class="summary-card success">
+                            <span class="summary-title">LEGITIMATE</span>
+                            <span class="summary-value" id="batchLegit">0</span>
+                        </div>
+                        <div class="summary-card">
+                            <span class="summary-title">AVG THREAT SCORE</span>
+                            <span class="summary-value" id="batchAvgScore">0</span>
+                        </div>
+                    </div>
+
+                    <div class="batch-actions-row">
+                        <h4>Batch Scan Results Table</h4>
+                        <button type="button" class="btn-export" onclick="downloadBatchCsv()">
+                            📥 Download Enriched CSV Report
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="cyber-table" id="batchTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Prediction</th>
+                                    <th>Score</th>
+                                    <th>Risk</th>
+                                    <th>Top Evidence Reason</th>
+                                    <th>Message Snippet</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: TELEMETRY & AUDIT LOG -->
+        <section id="tab-telemetry" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Scan Telemetry & Audit Log</h3>
+                    <button type="button" class="btn-refresh" onclick="fetchTelemetryAndHistory()">🔄 Refresh Telemetry</button>
+                </div>
+
+                <div class="telemetry-kpis">
+                    <div class="kpi-card">
+                        <span class="kpi-label">TOTAL SCANS RECORDED</span>
+                        <span class="kpi-num" id="kpiTotal">0</span>
+                    </div>
+                    <div class="kpi-card danger">
+                        <span class="kpi-label">SPAM / THREAT RATE</span>
+                        <span class="kpi-num" id="kpiRate">0%</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-label">AVERAGE THREAT SCORE</span>
+                        <span class="kpi-num" id="kpiAvgScore">0</span>
+                    </div>
+                    <div class="kpi-card success">
+                        <span class="kpi-label">AVERAGE ENGINE LATENCY</span>
+                        <span class="kpi-num" id="kpiLatency">0 ms</span>
+                    </div>
+                </div>
+
+                <div class="history-table-section">
+                    <h4>Recent Audit Log</h4>
+                    <div class="table-wrapper">
+                        <table class="cyber-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Channel</th>
+                                    <th>Verdict</th>
+                                    <th>Score</th>
+                                    <th>Risk</th>
+                                    <th>Primary Reason</th>
+                                    <th>Message Preview</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr><td colspan="7" style="text-align:center;">Loading audit history...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: VIVA GUIDE & MATH PROOFS -->
+        <section id="tab-viva-guide" class="tab-content" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🎓 Academic Project Guide, Mathematical Formulations & Viva Prep</h3>
+                    <button type="button" class="btn-primary" onclick="downloadDefenseDossier()" style="flex:none; padding:8px 16px;">
+                        📥 Download Defense Dossier (.md)
+                    </button>
+                </div>
+
+                <div class="viva-container">
+                    <div class="viva-card">
+                        <h4>1. Problem Statement</h4>
+                        <p>Modern electronic messaging (SMS, Email, Chat) is plagued by social engineering attacks, spoofed sender domains, and phishing links. Traditional keyword filters fail due to <strong>homoglyph obfuscation</strong> (e.g. Cyrillic lookalikes) and false-positive substring matches (e.g. *"winter"* triggering *"win"*). This project proposes an ensemble hybrid NLP architecture that combines <strong>probabilistic Bayesian inference</strong>, <strong>vector space cosine similarity</strong>, and <strong>deterministic threat heuristics</strong>.</p>
+                    </div>
+
+                    <div class="viva-card">
+                        <h4>2. Mathematical Formulation 1: Naive Bayes Theorem</h4>
+                        <p>Given a message represented as a feature vector of words \( W = \{w_1, w_2, \dots, w_n\} \), the posterior probability of being Spam is computed using Bayes' rule:</p>
+                        <div class="formula-box">
+                            $$P(\text{Spam} \mid W) = \frac{P(\text{Spam}) \prod_{i=1}^n P(w_i \mid \text{Spam})}{P(W)}$$
+                        </div>
+                        <p>To prevent underflow and zero-frequency errors, we apply <strong>Laplace Smoothing (\(\alpha = 1\))</strong>:</p>
+                        <div class="formula-box">
+                            $$\hat{P}(w_i \mid \text{Spam}) = \frac{\text{Count}(w_i, \text{Spam}) + 1}{\sum_{w} \text{Count}(w, \text{Spam}) + |V|}$$
+                        </div>
+                    </div>
+
+                    <div class="viva-card">
+                        <h4>3. Mathematical Formulation 2: TF-IDF & Cosine Similarity</h4>
+                        <p>Each document is represented in a multi-dimensional vector space using Term Frequency-Inverse Document Frequency:</p>
+                        <div class="formula-box">
+                            $$\text{TF-IDF}(t, d) = \text{TF}(t, d) \times \log\left(1 + \frac{N}{\text{DF}(t)}\right)$$
+                        </div>
+                        <p>The cosine angle between message vector \( \vec{q} \) and the spam centroid vector \( \vec{C}_{\text{spam}} \) measures semantic proximity:</p>
+                        <div class="formula-box">
+                            $$\text{Cosine Similarity} = \frac{\vec{q} \cdot \vec{C}_{\text{spam}}}{\|\vec{q}\| \|\vec{C}_{\text{spam}}\|}$$
+                        </div>
+                    </div>
+
+                    <div class="viva-card">
+                        <h4>4. Common Viva Defense Questions & Model Answers</h4>
+                        <details class="viva-faq">
+                            <summary><strong>Q: Why did you combine Heuristics with Machine Learning instead of using ML alone?</strong></summary>
+                            <p><strong>A:</strong> Machine learning models rely purely on token probabilities. Attackers can bypass pure ML by crafting "Good Word Attacks" (padding phishing links with clean dictionary words). By combining heuristics (URL IP checks, brand typosquatting, SPF/DKIM validation) with Naive Bayes, the system catches structural threats that ML probabilities alone would miss.</p>
+                        </details>
+                        <details class="viva-faq">
+                            <summary><strong>Q: What is the purpose of Laplace smoothing in your Bayes implementation?</strong></summary>
+                            <p><strong>A:</strong> If a test message contains a word that never appeared in the training spam dataset, the raw probability \( P(w \mid \text{Spam}) \) would be 0. Because probabilities are multiplied together, a single zero would zero out the entire product. Laplace smoothing adds 1 to the numerator to ensure non-zero values.</p>
+                        </details>
+                        <details class="viva-faq">
+                            <summary><strong>Q: How do you handle brand typosquatting like 'paypa1.com'?</strong></summary>
+                            <p><strong>A:</strong> We maintain a registry of high-value targeted brands and calculate string similarity and character substitution mappings (e.g. '1' -> 'l', '0' -> 'o'). If a domain references a brand name combined with unauthorized prefixes like 'login' or 'verify', a high-risk penalty is assigned.</p>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>SpamGuard AI • Student Capstone Project • Java 17 & Spring Boot 3.3.5 • Multi-Model NLP Architecture</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
